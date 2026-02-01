@@ -530,6 +530,14 @@ class App(ctk.CTk):
             command=self._ver_anexos_ti
         ).pack(side='left', padx=5)
 
+        ctk.CTkButton(
+            btn_frame,
+            text="Finalizar",
+            command=self._finalizar_ti,
+            fg_color="#22c55e",
+            hover_color="#16a34a"
+        ).pack(side='left', padx=5)
+
         # Carregar dados
         self.after(100, self._carregar_chamados_ti)
 
@@ -1274,13 +1282,20 @@ class App(ctk.CTk):
         if not self._verificar_chamado_assumido(id_chamado):
             return
 
-        # Criar diálogo para selecionar categoria
-        nova_categoria = simpledialog.askstring(
-            "Mover Categoria",
-            f"Categorias: {', '.join(settings.LISTA_CATEGORIA_MOVER)}\n\nDigite a nova categoria:"
-        )
+        # Obter categoria atual
+        categoria_atual = None
+        for item in self.tree_ti.selection():
+            valores = self.tree_ti.item(item, 'values')
+            if valores:
+                categoria_atual = valores[4]  # Coluna Categoria
+                break
 
-        if nova_categoria and nova_categoria in settings.LISTA_CATEGORIA_MOVER:
+        # Usar diálogo de seleção
+        from gui.dialogs.resposta_dialog import SelecionarCategoriaDialog
+        dialog = SelecionarCategoriaDialog(self, settings.LISTA_CATEGORIA_MOVER, categoria_atual)
+        nova_categoria = dialog.get_resultado()
+
+        if nova_categoria:
             if ChamadoService.mover_categoria(id_chamado, self.matricula_logada, nova_categoria):
                 messagebox.showinfo("Sucesso", f"Chamado movido para {nova_categoria}!")
                 self._carregar_chamados_ti()
@@ -1298,14 +1313,22 @@ class App(ctk.CTk):
         if not self._verificar_chamado_assumido(id_chamado):
             return
 
-        nova_prioridade = simpledialog.askstring(
-            "Alterar Prioridade",
-            "Opções: ALTA, MEDIA, BAIXA\n\nDigite a nova prioridade:"
-        )
+        # Obter prioridade atual
+        prioridade_atual = None
+        for item in self.tree_ti.selection():
+            valores = self.tree_ti.item(item, 'values')
+            if valores:
+                prioridade_atual = valores[5]  # Coluna Prioridade
+                break
 
-        if nova_prioridade and nova_prioridade.upper() in ['ALTA', 'MEDIA', 'BAIXA']:
-            if ChamadoService.mover_prioridade(id_chamado, self.matricula_logada, nova_prioridade.upper()):
-                messagebox.showinfo("Sucesso", f"Prioridade alterada para {nova_prioridade.upper()}!")
+        # Usar diálogo de seleção
+        from gui.dialogs.resposta_dialog import SelecionarPrioridadeDialog
+        dialog = SelecionarPrioridadeDialog(self, prioridade_atual)
+        nova_prioridade = dialog.get_resultado()
+
+        if nova_prioridade:
+            if ChamadoService.mover_prioridade(id_chamado, self.matricula_logada, nova_prioridade):
+                messagebox.showinfo("Sucesso", f"Prioridade alterada para {nova_prioridade}!")
                 self._carregar_chamados_ti()
             else:
                 messagebox.showerror("Erro", "Falha ao alterar prioridade.")
@@ -1330,6 +1353,56 @@ class App(ctk.CTk):
         # Usar diálogo customizado para listar anexos
         from gui.dialogs.resposta_dialog import HistoricoAnexosDialog
         HistoricoAnexosDialog(self, id_chamado, anexos)
+
+    def _finalizar_ti(self):
+        """Finaliza o chamado selecionado (requer assumir primeiro)"""
+        id_chamado = self._get_selected_id_ti()
+        if not id_chamado:
+            messagebox.showwarning("Aviso", "Selecione um chamado.")
+            return
+
+        # Verificar se assumiu o chamado
+        if not self._verificar_chamado_assumido(id_chamado):
+            return
+
+        # Confirmar finalização
+        if not messagebox.askyesno(
+            "Confirmar Finalização",
+            f"Deseja finalizar o chamado #{id_chamado}?\n\n"
+            "Esta ação não pode ser desfeita."
+        ):
+            return
+
+        # Finalizar chamado
+        try:
+            from config.database import get_connection
+            conn = get_connection()
+            cur = conn.cursor()
+
+            # Atualizar status para FINALIZADO
+            cur.execute("""
+                UPDATE PCS_CHAMADOS_TI
+                SET STATUS = 'FINALIZADO', DATA_FINALIZACAO = SYSDATE
+                WHERE ID = :id
+            """, {"id": id_chamado})
+
+            # Registrar no histórico
+            cur.execute("""
+                INSERT INTO PCS_CHAMADOS_TI_HIST (IDHIST, IDCHAMADO, MATRICULA, TIPO, MENSAGEM, DATAHORA)
+                VALUES (SEQ_PCS_CHAMADOS_TI_HIST.NEXTVAL, :id, :mat, 'FINALIZACAO', 'Chamado finalizado pelo analista', SYSDATE)
+            """, {"id": id_chamado, "mat": self.matricula_logada})
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            logger.info(f"Chamado {id_chamado} finalizado pelo analista {self.matricula_logada}")
+            messagebox.showinfo("Sucesso", f"Chamado #{id_chamado} finalizado com sucesso!")
+            self._carregar_chamados_ti()
+
+        except Exception as e:
+            logger.error(f"Erro ao finalizar chamado: {e}")
+            messagebox.showerror("Erro", f"Falha ao finalizar chamado:\n{e}")
 
     # ========== Handlers Dashboard ==========
 

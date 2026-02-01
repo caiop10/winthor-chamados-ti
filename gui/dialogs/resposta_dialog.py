@@ -253,3 +253,199 @@ class HistoricoAnexosDialog(ctk.CTkToplevel):
         except Exception as e:
             from tkinter import messagebox
             messagebox.showerror("Erro", str(e))
+
+
+class SelecionarCategoriaDialog(ctk.CTkToplevel):
+    """Diálogo para selecionar categoria"""
+
+    def __init__(self, parent, categorias: list, categoria_atual: str = None):
+        super().__init__(parent)
+
+        self.title("Mover Categoria")
+        self.geometry("400x450")
+        self.resizable(False, False)
+
+        # Centralizar
+        self.update_idletasks()
+        x = (self.winfo_screenwidth() - 400) // 2
+        y = (self.winfo_screenheight() - 450) // 2
+        self.geometry(f"400x450+{x}+{y}")
+
+        self.resultado = None
+        self.transient(parent)
+        self.grab_set()
+
+        # Título
+        ctk.CTkLabel(
+            self,
+            text="📁 Selecione a Nova Categoria",
+            font=("Segoe UI", 16, "bold")
+        ).pack(pady=(20, 10))
+
+        if categoria_atual:
+            ctk.CTkLabel(
+                self,
+                text=f"Categoria atual: {categoria_atual}",
+                text_color="#64748b"
+            ).pack(pady=(0, 10))
+
+        # Frame com scroll para categorias
+        scroll_frame = ctk.CTkScrollableFrame(self, height=280)
+        scroll_frame.pack(fill='both', expand=True, padx=20, pady=10)
+
+        self.var_categoria = ctk.StringVar(value="")
+
+        for cat in categorias:
+            btn = ctk.CTkRadioButton(
+                scroll_frame,
+                text=cat,
+                variable=self.var_categoria,
+                value=cat,
+                font=("Segoe UI", 12)
+            )
+            btn.pack(anchor='w', pady=5, padx=10)
+
+        # Botões
+        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        btn_frame.pack(fill='x', padx=20, pady=20)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="Cancelar",
+            command=self._cancelar,
+            fg_color="#6b7280",
+            hover_color="#4b5563",
+            width=100
+        ).pack(side='right', padx=5)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="Confirmar",
+            command=self._confirmar,
+            fg_color="#3b82f6",
+            hover_color="#2563eb",
+            width=100
+        ).pack(side='right', padx=5)
+
+        self.bind('<Escape>', lambda e: self._cancelar())
+
+    def _confirmar(self):
+        """Confirma a seleção"""
+        cat = self.var_categoria.get()
+        if cat:
+            self.resultado = cat
+            self.destroy()
+        else:
+            from tkinter import messagebox
+            messagebox.showwarning("Aviso", "Selecione uma categoria.")
+
+    def _cancelar(self):
+        """Cancela"""
+        self.resultado = None
+        self.destroy()
+
+    def get_resultado(self):
+        """Retorna a categoria selecionada"""
+        self.wait_window()
+        return self.resultado
+
+
+class SelecionarPrioridadeDialog(ctk.CTkToplevel):
+    """Diálogo para selecionar prioridade"""
+
+    def __init__(self, parent, prioridade_atual: str = None):
+        super().__init__(parent)
+
+        self.title("Alterar Prioridade")
+        self.geometry("350x280")
+        self.resizable(False, False)
+
+        # Centralizar
+        self.update_idletasks()
+        x = (self.winfo_screenwidth() - 350) // 2
+        y = (self.winfo_screenheight() - 280) // 2
+        self.geometry(f"350x280+{x}+{y}")
+
+        self.resultado = None
+        self.transient(parent)
+        self.grab_set()
+
+        # Título
+        ctk.CTkLabel(
+            self,
+            text="⚡ Selecione a Nova Prioridade",
+            font=("Segoe UI", 16, "bold")
+        ).pack(pady=(20, 10))
+
+        if prioridade_atual:
+            ctk.CTkLabel(
+                self,
+                text=f"Prioridade atual: {prioridade_atual}",
+                text_color="#64748b"
+            ).pack(pady=(0, 10))
+
+        # Frame para prioridades
+        prio_frame = ctk.CTkFrame(self, fg_color="transparent")
+        prio_frame.pack(fill='x', padx=40, pady=10)
+
+        self.var_prioridade = ctk.StringVar(value="")
+
+        prioridades = [
+            ("🔴 ALTA", "ALTA", "#ef4444"),
+            ("🟡 MEDIA", "MEDIA", "#f59e0b"),
+            ("🟢 BAIXA", "BAIXA", "#22c55e")
+        ]
+
+        for texto, valor, cor in prioridades:
+            btn = ctk.CTkRadioButton(
+                prio_frame,
+                text=texto,
+                variable=self.var_prioridade,
+                value=valor,
+                font=("Segoe UI", 14)
+            )
+            btn.pack(anchor='w', pady=8)
+
+        # Botões
+        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        btn_frame.pack(fill='x', padx=20, pady=20)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="Cancelar",
+            command=self._cancelar,
+            fg_color="#6b7280",
+            hover_color="#4b5563",
+            width=100
+        ).pack(side='right', padx=5)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="Confirmar",
+            command=self._confirmar,
+            fg_color="#3b82f6",
+            hover_color="#2563eb",
+            width=100
+        ).pack(side='right', padx=5)
+
+        self.bind('<Escape>', lambda e: self._cancelar())
+
+    def _confirmar(self):
+        """Confirma a seleção"""
+        prio = self.var_prioridade.get()
+        if prio:
+            self.resultado = prio
+            self.destroy()
+        else:
+            from tkinter import messagebox
+            messagebox.showwarning("Aviso", "Selecione uma prioridade.")
+
+    def _cancelar(self):
+        """Cancela"""
+        self.resultado = None
+        self.destroy()
+
+    def get_resultado(self):
+        """Retorna a prioridade selecionada"""
+        self.wait_window()
+        return self.resultado
