@@ -104,6 +104,9 @@ class App(ctk.CTk):
                     self._auto_refresh
                 )
 
+            # Iniciar polling de notificações
+            self._iniciar_notificacoes()
+
         except Exception as e:
             logger.error(f"Erro na inicialização: {e}")
             messagebox.showerror("Erro", f"Erro ao inicializar: {e}")
@@ -784,14 +787,12 @@ class App(ctk.CTk):
     # ========== Métodos auxiliares ==========
 
     def _is_ti(self) -> bool:
-        """Verifica se usuário é TI"""
-        return (self.codsetor_logado == 10) or (
-            self.matricula_logada in settings.USUARIOS_TI if self.matricula_logada else False
-        )
+        """Verifica se usuário é TI (codsetor = 10)"""
+        return self.codsetor_logado == 10
 
     def _is_gerencia(self) -> bool:
-        """Verifica se usuário é gerência"""
-        return self.matricula_logada in settings.USUARIOS_GERENCIA if self.matricula_logada else False
+        """Verifica se usuário é gerência (apenas matrícula 14)"""
+        return self.matricula_logada == 14
 
     def _get_selected_id_meus(self) -> int:
         """Retorna ID do chamado selecionado em Meus Chamados"""
@@ -1664,8 +1665,56 @@ class App(ctk.CTk):
         except Exception as e:
             messagebox.showerror("Erro", str(e))
 
+    # ========== Notificações ==========
+
+    def _iniciar_notificacoes(self):
+        """Inicia o sistema de notificações"""
+        try:
+            notification_service.iniciar_polling(
+                matricula=self.matricula_logada,
+                callback=self._on_notificacao_recebida,
+                intervalo=30  # 30 segundos
+            )
+            logger.info("Sistema de notificações iniciado")
+        except Exception as e:
+            logger.error(f"Erro ao iniciar notificações: {e}")
+
+    def _on_notificacao_recebida(self, notificacoes):
+        """Callback chamado quando há novas notificações"""
+        try:
+            # Atualizar lista de chamados na thread principal
+            self.after(0, self._atualizar_apos_notificacao, notificacoes)
+        except Exception as e:
+            logger.error(f"Erro no callback de notificação: {e}")
+
+    def _atualizar_apos_notificacao(self, notificacoes):
+        """Atualiza a interface após receber notificações"""
+        try:
+            # Verificar tipos de notificação para atualizar abas relevantes
+            tipos = set(n.tipo for n in notificacoes)
+
+            # Se é analista TI (codsetor = 10), atualizar Painel TI
+            if self.codsetor_logado == 10:
+                if 'NOVO_CHAMADO' in tipos or 'RESPOSTA_USUARIO' in tipos:
+                    self._carregar_chamados_ti()
+
+            # Atualizar Meus Chamados para qualquer notificação relacionada
+            if any(t in tipos for t in ['RESPOSTA_ANALISTA', 'CHAMADO_ASSUMIDO', 'FINALIZADO']):
+                self._carregar_meus_chamados()
+
+            # Atualizar última atualização
+            self._update_last_update()
+
+        except Exception as e:
+            logger.error(f"Erro ao atualizar após notificação: {e}")
+
     def on_closing(self):
         """Handler de fechamento"""
+        try:
+            # Parar polling de notificações
+            notification_service.parar_polling()
+        except Exception:
+            pass
         try:
             db_pool.close()
         except Exception:

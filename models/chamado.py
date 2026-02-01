@@ -17,15 +17,13 @@ class Usuario:
 
     @property
     def is_ti(self) -> bool:
-        """Verifica se usuário é do setor TI"""
-        from config.settings import settings
-        return self.codsetor == 10 or self.matricula in settings.USUARIOS_TI
+        """Verifica se usuário é do setor TI (codsetor = 10)"""
+        return self.codsetor == 10
 
     @property
     def is_gerencia(self) -> bool:
-        """Verifica se usuário tem acesso à gerência"""
-        from config.settings import settings
-        return self.matricula in settings.USUARIOS_GERENCIA
+        """Verifica se usuário tem acesso à gerência (apenas matrícula 14)"""
+        return self.matricula == 14
 
 
 @dataclass
