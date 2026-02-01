@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Abertura de Chamados | SOTRIGO</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: Arial; }
+        .box { width: 450px; margin: 50px auto; padding: 25px; background: #1e293b; border-radius: 10px; }
+        input, select, textarea { width: 100%; padding: 8px; margin: 8px 0; border-radius: 6px; border: none; }
+        button { width: 100%; padding: 10px; background: #2563eb; border: none; color: #fff; font-size: 16px; border-radius: 6px; cursor: pointer; }
+        .msg { padding: 10px; margin-top: 13px; border-radius: 8px; background: #065f46; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Abertura de Chamado TI</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="msg">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label>Matrícula</label>
+            <input type="text" name="matricula">
+
+            <label>Prioridade</label>
+            <select name="prioridade">
+                <option value="BAIXA">Baixa</option>
+                <option value="MEDIA">Média</option>
+                <option value="ALTA">Alta</option>
+            </select>
+
+            <label>Descrição</label>
+            <textarea name="descricao"></textarea>
+
+            <button type="submit">Abrir Chamado</button>
+        </form>
+
+        <br>
+        <a style="color: #93c5fd;" href="/lista">Ver lista de chamados</a>
+    </div>
+</body>
+</html>

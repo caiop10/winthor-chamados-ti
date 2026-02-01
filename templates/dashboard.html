@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard TI - Chamados</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background:#020617; color:#e5e7eb; font-family: Arial; }
+        .container { max-width: 1000px; margin: 20px auto; }
+        canvas { background:#0f172a; padding:10px; border-radius:10px; margin-bottom:20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Dashboard de Chamados TI</h2>
+    <p>Visão para diretoria.</p>
+
+    <h3>Chamados por Status</h3>
+    <canvas id="chartStatus"></canvas>
+
+    <h3>Chamados por Prioridade</h3>
+    <canvas id="chartPrioridade"></canvas>
+
+    <h3>Chamados por Setor</h3>
+    <canvas id="chartSetor"></canvas>
+
+    <br>
+    <a href="/painel_ti">Voltar ao painel TI</a>
+</div>
+
+<script>
+    const porStatus = {{ por_status|tojson }};
+    const porPrioridade = {{ por_prioridade|tojson }};
+    const porSetor = {{ por_setor|tojson }};
+
+    function montarDados(lista) {
+        const labels = [];
+        const values = [];
+        for (let i = 0; i < lista.length; i++) {
+            labels.push(lista[i][0]);
+            values.push(lista[i][1]);
+        }
+        return {labels, values};
+    }
+
+    const dsStatus = montarDados(porStatus);
+    const dsPrioridade = montarDados(porPrioridade);
+    const dsSetor = montarDados(porSetor);
+
+    new Chart(document.getElementById('chartStatus'), {
+        type: 'bar',
+        data: { labels: dsStatus.labels, datasets: [{ data: dsStatus.values }] }
+    });
+
+    new Chart(document.getElementById('chartPrioridade'), {
+        type: 'bar',
+        data: { labels: dsPrioridade.labels, datasets: [{ data: dsPrioridade.values }] }
+    });
+
+    new Chart(document.getElementById('chartSetor'), {
+        type: 'bar',
+        data: { labels: dsSetor.labels, datasets: [{ data: dsSetor.values }] }
+    });
+</script>
+</body>
+</html>

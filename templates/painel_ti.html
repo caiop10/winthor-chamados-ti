@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel TI - Chamados</title>
+    <style>
+        body { background: #020617; color: #e5e7eb; font-family: Arial; }
+        .topo { padding: 16px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; border-bottom: 1px solid #1f2937; }
+        .sla-ok { color: #22c55e; }
+        .sla-vencido { color: #f97316; font-weight: bold; }
+        .btn-fechar { padding: 4px 8px; background: #ef4444; color: #fff; border-radius: 6px; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="topo">
+    <h2>Painel TI - Chamados</h2>
+
+    <form method="get">
+        Status:
+        <select name="status">
+            <option value="">Todos</option>
+            <option value="ABERTO"  {% if status == 'ABERTO' %}selected{% endif %}>Abertos</option>
+            <option value="FECHADO" {% if status == 'FECHADO' %}selected{% endif %}>Fechados</option>
+        </select>
+
+        Prioridade:
+        <select name="prioridade">
+            <option value="">Todas</option>
+            <option value="BAIXA" {% if prioridade == 'BAIXA' %}selected{% endif %}>Baixa</option>
+            <option value="MEDIA" {% if prioridade == 'MEDIA' %}selected{% endif %}>Média</option>
+            <option value="ALTA"  {% if prioridade == 'ALTA' %}selected{% endif %}>Alta</option>
+        </select>
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Abertura</th>
+            <th>Usuário</th>
+            <th>Setor</th>
+            <th>Prioridade</th>
+            <th>Status</th>
+            <th>SLA</th>
+            <th>Ações</th>
+        </tr>
+        {% for c in chamados %}
+        <tr>
+            <td>{{ c[0] }}</td>
+            <td>{{ c[1] }}</td>
+            <td>{{ c[3] }}</td>
+            <td>{{ c[4] }}</td>
+            <td>{{ c[5] }}</td>
+            <td>{{ c[6] }}</td>
+            <td>
+                {% if c[8] == 'VENCIDO' %}
+                    <span class="sla-vencido">{{ c[8] }}</span>
+                {% else %}
+                    <span class="sla-ok">{{ c[8] }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if c[6] != 'FECHADO' %}
+                    <a class="btn-fechar" href="{{ url_for('fechar', id=c[0]) }}">Fechar</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <a href="/">Voltar</a> | <a href="/dashboard">Dashboard</a>
+</div>
+</body>
+</html>

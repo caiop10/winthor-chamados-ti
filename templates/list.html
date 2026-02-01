@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Chamados | TI</title>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: Arial; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #475569; }
+        a { color: #38bdf8; text-decoration: none; }
+        .btn { padding: 5px 10px; background: #ef4444; border-radius: 6px; color: #fff; }
+    </style>
+</head>
+<body>
+
+<h2>Lista de Chamados</h2>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Abertura</th>
+        <th>Usuário</th>
+        <th>Setor</th>
+        <th>Prioridade</th>
+        <th>Status</th>
+        <th>Ações</th>
+    </tr>
+
+    {% for c in chamados %}
+    <tr>
+        <td>{{ c[0] }}</td>
+        <td>{{ c[1] }}</td>
+        <td>{{ c[3] }}</td>
+        <td>{{ c[4] }}</td>
+        <td>{{ c[5] }}</td>
+        <td>{{ c[6] }}</td>
+        <td>
+            {% if c[6] != 'FECHADO' %}
+                <a class="btn" href="/fechar/{{ c[0] }}">Fechar</a>
+            {% else %}
+                Fechado
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="/">Voltar</a>
+
+</body>
+</html>
