@@ -1,14 +1,64 @@
 # -*- coding: utf-8 -*-
 """
 Configurações do Sistema - Carrega variáveis do .env
+Suporta execução standalone (executável) e desenvolvimento
 """
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Carrega .env do diretório do projeto
-PROJECT_ROOT = Path(__file__).parent.parent
-load_dotenv(PROJECT_ROOT / '.env')
+
+def get_base_path():
+    """Retorna o diretório base do projeto"""
+    if getattr(sys, 'frozen', False):
+        # Executável PyInstaller
+        return Path(sys._MEIPASS)
+    else:
+        # Script Python
+        return Path(__file__).parent.parent
+
+
+def get_config_path():
+    """Retorna o diretório para arquivos de configuração (.env)"""
+    if getattr(sys, 'frozen', False):
+        # Executável - busca .env em vários locais
+        possible_paths = [
+            Path(sys.executable).parent,  # Pasta do executável
+            Path(r"C:\ProgramData\ROTINA-CHAMADO"),  # Pasta de dados do programa
+            Path(os.environ.get('APPDATA', '')) / "ROTINA-CHAMADO",  # AppData do usuário
+        ]
+        for p in possible_paths:
+            if (p / '.env').exists():
+                return p
+        # Se não encontrar, retorna pasta do executável
+        return Path(sys.executable).parent
+    else:
+        # Script Python
+        return Path(__file__).parent.parent
+
+
+def get_logs_path():
+    """Retorna o diretório para logs"""
+    if getattr(sys, 'frozen', False):
+        # Executável - logs em local gravável
+        logs_dir = Path(os.environ.get('APPDATA', '')) / "ROTINA-CHAMADO" / "logs"
+    else:
+        logs_dir = Path(__file__).parent.parent / "logs"
+
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    return logs_dir
+
+
+# Diretórios
+BASE_PATH = get_base_path()
+CONFIG_PATH = get_config_path()
+LOGS_PATH = get_logs_path()
+
+# Carrega .env
+env_file = CONFIG_PATH / '.env'
+if env_file.exists():
+    load_dotenv(env_file)
 
 
 class Settings:
@@ -38,7 +88,7 @@ class Settings:
         self.SERVIDOR_REDE = os.getenv('SERVIDOR_REDE', r'\\192.168.0.155\Compartilhamentos')
         self.ANEXOS_DIR = os.getenv('ANEXOS_DIR', rf'{self.SERVIDOR_REDE}\imagens_chamados')
 
-        # Usuários especiais
+        # Usuários especiais (não mais usados, mas mantidos para compatibilidade)
         self.USUARIOS_TI = self._parse_list(os.getenv('USUARIOS_TI', '14'))
         self.USUARIOS_GERENCIA = self._parse_list(os.getenv('USUARIOS_GERENCIA', '14'))
 
@@ -55,7 +105,7 @@ class Settings:
         # Logging
         self.LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
         self.LOG_FILE = os.getenv('LOG_FILE', 'chamados_ti.log')
-        self.LOG_DIR = PROJECT_ROOT / 'logs'
+        self.LOG_DIR = LOGS_PATH
 
         # Listas de opções
         self.LISTA_STATUS = ["Todos", "ABERTO", "EM_RESOLUCAO", "AGUARDANDO", "FINALIZADO"]

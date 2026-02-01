@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-PSAAP9805 - Chamados TI (Versão Refatorada)
+PSAAP9805 - Chamados TI (Versão Standalone)
 Launcher para integração com WinThor
 
-Este launcher recebe os parâmetros do WinThor e inicia a aplicação
-de chamados de TI na versão modular refatorada.
+Executável standalone - não depende de código fonte externo.
+O .env deve estar na mesma pasta do executável ou em C:\ProgramData\ROTINA-CHAMADO\
 
 Parâmetros esperados do WinThor:
     sys.argv[1] = USUARIOWT (matrícula ou nome do usuário)
@@ -15,25 +15,6 @@ Parâmetros esperados do WinThor:
 """
 import sys
 import os
-
-# Detectar diretório do projeto
-# Se executando como .exe (PyInstaller), usar pasta P: (compartilhada via VPN)
-# Se executando como .py/.pyw, usar diretório do script
-if getattr(sys, 'frozen', False):
-    # Executável compilado - usar pasta P: compartilhada
-    PROJETO_DIR = r"P:\ROTINA-CHAMADO"
-else:
-    # Executando como script Python
-    PROJETO_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Adicionar diretório do projeto ao path
-sys.path.insert(0, PROJETO_DIR)
-
-# Mudar diretório de trabalho (com tratamento de erro)
-try:
-    os.chdir(PROJETO_DIR)
-except Exception:
-    pass  # Ignorar se não conseguir mudar
 
 
 def show_splash():
@@ -144,7 +125,7 @@ def main():
             root.withdraw()
             messagebox.showerror(
                 "Erro ao iniciar",
-                f"Falha ao iniciar Chamados TI:\n\n{str(e)}\n\nDiretório: {PROJETO_DIR}"
+                f"Falha ao iniciar Chamados TI:\n\n{str(e)}"
             )
             root.destroy()
         except:

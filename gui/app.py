@@ -1383,7 +1383,7 @@ class App(ctk.CTk):
             # Atualizar status para FINALIZADO
             cur.execute("""
                 UPDATE PCS_CHAMADOS_TI
-                SET STATUS = 'FINALIZADO', DATA_FINALIZACAO = SYSDATE
+                SET STATUS = 'FINALIZADO', DATA_FECHAMENTO = SYSDATE
                 WHERE ID = :id
             """, {"id": id_chamado})
 
